@@ -6,7 +6,8 @@
  * <height>, <width>, <additional spacing per char>, 
  * <first ascii char>, <last ascii char>,
  * <data>
- */
+ * aqui esta el arreglo 
+ */  
 const uint8_t font_8x5[] =
 {
 			8, 5, 1, 32, 126,

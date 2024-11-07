@@ -39,19 +39,18 @@ void arranque(void) {
 void impre(void) {
     const char *words[]= {"Jose Isaac", "Suarez", "Guzman"};
 
-    ssd1306_t disp;
+    dandan_t disp;
     disp.external_vcc=false;
-    ssd1306_init(&disp, 128, 64, 0x3C, i2c1);
-    ssd1306_clear(&disp);
+    dandan_init(&disp, 128,65, 0x3C, i2c1);
+
+    dandan_limp(&disp);
     char buf[8];
 
     for(;;) {
         
-        for(int i=0; i<sizeof(words)/sizeof(char *); ++i) {
-            ssd1306_draw_string(&disp, 8, 24, 2, words[i]);
-            ssd1306_show(&disp);
-            sleep_ms(800);
-            ssd1306_clear(&disp);
-        }        
+        dandan_escribe_string(&disp, 8 , 10 , 3 , "JISG");
+        dandan_mostrar(&disp);
+        sleep_ms(1000);
+        dandan_limp(&disp);
     }
 }

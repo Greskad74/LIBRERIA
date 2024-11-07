@@ -152,8 +152,10 @@ void dandan_escribe_pixel(dandan_t *p, uint32_t x, uint32_t y) {
     p->buffer[x+p->width*(y>>3)]|=0x1<<(y&0x07); // y>>3==y/8 && y&0x7==y%8
 }
 
-
-
+void dandan_escribe_string(dandan_t *p, uint32_t x, uint32_t y, uint32_t scale, const char *s) {
+    dandan_escribe_string_with_font(p, x, y, scale, font_8x5, s);
+                                                    // font = arreglo de mapeo
+}
 
 void dandan_escribe(dandan_t *p) {
     uint8_t payload[]= {SET_COL_ADDR, 0, p->width-1, SET_PAGE_ADDR, 0, p->pages-1};

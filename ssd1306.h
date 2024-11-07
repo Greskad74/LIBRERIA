@@ -70,11 +70,9 @@ void dandan_escribe_pixel(dandan_t *p, uint32_t x, uint32_t y);
 
 
 
-// Cambio de fondo de letra 
 
 
-
-void dandan_draw_char(dandan_t *p, uint32_t x, uint32_t y, uint32_t scale, char c);
+void dandan_escribe_char(dandan_t *p, uint32_t x, uint32_t y, uint32_t scale, char c);
 
 /**
 	@brief draw string with given font
@@ -86,7 +84,7 @@ void dandan_draw_char(dandan_t *p, uint32_t x, uint32_t y, uint32_t scale, char 
 	@param[in] font : pointer to font
 	@param[in] s : text to draw
 */
-void dandan_draw_string_with_font(dandan_t *p, uint32_t x, uint32_t y, uint32_t scale, const uint8_t *font, const char *s );
+void dandan_escribe_string_with_font(dandan_t *p, uint32_t x, uint32_t y, uint32_t scale, const uint8_t *font, const char *s );
 
 /**
 	@brief draw string with builtin font
@@ -97,6 +95,6 @@ void dandan_draw_string_with_font(dandan_t *p, uint32_t x, uint32_t y, uint32_t 
 	@param[in] scale : scale font to n times of original size (default should be 1)
 	@param[in] s : text to draw
 */
-void dandan_draw_string(dandan_t *p, uint32_t x, uint32_t y, uint32_t scale, const char *s);
+void dandan_escribe_string(dandan_t *p, uint32_t x, uint32_t y, uint32_t scale, const char *s);
 
 #endif
