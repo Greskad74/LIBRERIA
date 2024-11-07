@@ -58,16 +58,16 @@ inline static void dandan_escribe(dandan_t *p, uint8_t val) {
     fancy_write(p->i2c_i, p->address, d, 2, "dandan_escribe");
 }
 
-bool dandan_init(dandan_t *p, uint16_t width, uint16_t height, uint8_t address, i2c_inst_t *i2c_instance) {
-    p->width=width;
-    p->height=height;
-    p->pages=height/8;
+bool dandan_init(dandan_t *p, uint16_t ancho, uint16_t alto, uint8_t address, i2c_inst_t *i2c_instance) {
+    p->ancho=ancho;
+    p->alto=alto;
+    p->pages=alto/8;
     p->address=address;
 
     p->i2c_i=i2c_instance;
 
 
-    p->bufsize=(p->pages)*(p->width);
+    p->bufsize=(p->pages)*(p->ancho);
     if((p->buffer=malloc(p->bufsize+1))==NULL) {
         p->bufsize=0;
         return false;
@@ -82,7 +82,7 @@ bool dandan_init(dandan_t *p, uint16_t width, uint16_t height, uint8_t address, 
         SET_DISP_CLK_DIV,
         0x80,
         SET_MUX_RATIO,
-        height - 1,
+        alto - 1,
         SET_DISP_OFFSET,
         0x00,
         // resolution and layout
@@ -93,7 +93,7 @@ bool dandan_init(dandan_t *p, uint16_t width, uint16_t height, uint8_t address, 
         SET_SEG_REMAP | 0x01,           // column addr 127 mapped to SEG0
         SET_COM_OUT_DIR | 0x08,         // scan from COM[N] to COM0
         SET_COM_PIN_CFG,
-        width>2*height?0x02:0x12,
+        ancho>2*alto?0x02:0x12,
         // display
         SET_CONTRAST,
         0xff,
@@ -141,15 +141,15 @@ inline void dandan_limpia (dandan_t *p) {
 }
 
 void dandan_limpia_pixel (dandan_t *p, uint32_t x, uint32_t y) {
-    if(x>=p->width || y>=p->height) return;
+    if(x>=p->ancho || y>=p->alto) return;
 
-    p->buffer[x+p->width*(y>>3)]&=~(0x1<<(y&0x07));
+    p->buffer[x+p->ancho*(y>>3)]&=~(0x1<<(y&0x07));
 }
 
 void dandan_escribe_pixel(dandan_t *p, uint32_t x, uint32_t y) {
-    if(x>=p->width || y>=p->height) return;
+    if(x>=p->ancho || y>=p->alto) return;
 
-    p->buffer[x+p->width*(y>>3)]|=0x1<<(y&0x07); // y>>3==y/8 && y&0x7==y%8
+    p->buffer[x+p->ancho*(y>>3)]|=0x1<<(y&0x07); // y>>3==y/8 && y&0x7==y%8
 }
 
 void dandan_escribe_string(dandan_t *p, uint32_t x, uint32_t y, uint32_t scale, const char *s) {
@@ -158,8 +158,8 @@ void dandan_escribe_string(dandan_t *p, uint32_t x, uint32_t y, uint32_t scale, 
 }
 
 void dandan_escribe(dandan_t *p) {
-    uint8_t payload[]= {SET_COL_ADDR, 0, p->width-1, SET_PAGE_ADDR, 0, p->pages-1};
-    if(p->width==64) {
+    uint8_t payload[]= {SET_COL_ADDR, 0, p->ancho-1, SET_PAGE_ADDR, 0, p->pages-1};
+    if(p->ancho==64) {
         payload[1]+=32;
         payload[2]+=32;
     }
