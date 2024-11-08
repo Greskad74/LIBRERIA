@@ -3,7 +3,7 @@
 #include <string.h>
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
-#include "ssd1306.h"
+#include "dandan.h"
 
 
 const uint8_t num_chars_per_disp[]={7,7,7,5};

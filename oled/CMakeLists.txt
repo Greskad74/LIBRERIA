@@ -14,7 +14,7 @@ pico_sdk_init()
 # rest of your project
 
 add_executable(oled
-	oled.c ../ssd1306.c
+	oled.c ../dandan.c
 )
 
 target_include_directories(oled

@@ -7,7 +7,7 @@
 #include <string.h>
 #include <stdio.h>
 
-#include "ssd1306.h"
+#include "dandan.h"
 #include "papyrus_data.h"
 
 
