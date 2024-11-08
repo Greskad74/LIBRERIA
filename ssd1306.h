@@ -74,6 +74,8 @@ void dandan_escribe_pixel(dandan_t *p, uint32_t x, uint32_t y);
 
 void dandan_escribe_char(dandan_t *p, uint32_t x, uint32_t y, uint32_t scale, char c);
 
+void dandan_escribe_char_with_font(dandan_t *p, uint32_t x, uint32_t y, uint32_t scale, const uint8_t *font, char c);
+
 /**
 	@brief draw string with given font
 
@@ -96,5 +98,7 @@ void dandan_escribe_string_with_font(dandan_t *p, uint32_t x, uint32_t y, uint32
 	@param[in] s : text to draw
 */
 void dandan_escribe_string(dandan_t *p, uint32_t x, uint32_t y, uint32_t scale, const char *s);
+
+void dandan_escribe_square(dandan_t *p, uint32_t x, uint32_t y, uint32_t ancho, uint32_t alto);
 
 #endif

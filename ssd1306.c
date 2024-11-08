@@ -1,27 +1,4 @@
-/*
 
-MIT License
-
-Copyright (c) 2021 David Schramm
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-*/
 
 #include <pico/stdlib.h>
 #include <hardware/i2c.h>
@@ -31,7 +8,11 @@ SOFTWARE.
 #include <stdio.h>
 
 #include "ssd1306.h"
-#include "font.h"
+#include "papyrus_data.h"
+
+
+
+void dandan_escribe(dandan_t *p, uint8_t val);
 
 inline static void swap(int32_t *a, int32_t *b) {
     int32_t *t=a;
@@ -52,17 +33,24 @@ inline static void fancy_write(i2c_inst_t *i2c, uint8_t addr, const uint8_t *src
         break;
     }
 }
+inline static void dandan_envia_comando(dandan_t *p, uint8_t val);
 
-inline static void dandan_escribe(dandan_t *p, uint8_t val) {
-    uint8_t d[2]= {0x00, val};
-    fancy_write(p->i2c_i, p->address, d, 2, "dandan_escribe");
+void dandan_escribe_pixel(dandan_t *p, uint32_t x, uint32_t y) {
+    if(x>=p->ancho || y>=p->alto) return;
+
+    p->buffer[x+p->ancho*(y>>3)]|=0x1<<(y&0x07); // y>>3==y/8 && y&0x7==y%8
 }
 
-bool dandan_init(dandan_t *p, uint16_t ancho, uint16_t alto, uint8_t address, i2c_inst_t *i2c_instance) {
+inline static void dandan_escribe_comando(dandan_t *p, uint8_t val) {
+    uint8_t d[2]= {0x00, val};
+    fancy_write(p->i2c_i, p->dire, d, 2, "dandan_escribe");
+}
+
+bool dandan_init(dandan_t *p, uint16_t ancho, uint16_t alto, uint8_t dire, i2c_inst_t *i2c_instance) {
     p->ancho=ancho;
     p->alto=alto;
     p->pages=alto/8;
-    p->address=address;
+    p->dire=dire;
 
     p->i2c_i=i2c_instance;
 
@@ -73,9 +61,9 @@ bool dandan_init(dandan_t *p, uint16_t ancho, uint16_t alto, uint8_t address, i2
         return false;
     }
 
+
     ++(p->buffer);
 
-    // from https://github.com/makerportal/rpi-pico-ssd1306
     uint8_t cmds[]= {
         SET_DISP,
         // timing and driving scheme
@@ -104,13 +92,13 @@ bool dandan_init(dandan_t *p, uint16_t ancho, uint16_t alto, uint8_t address, i2
         SET_ENTIRE_ON,                  // output follows RAM contents
         SET_NORM_INV,                   // not inverted
         SET_DISP | 0x01,
-        // address setting
+        // dire setting
         SET_MEM_ADDR,
         0x00,  // horizontal
     };
 
     for(size_t i=0; i<sizeof(cmds); ++i)
-        dandan_escribe(p, cmds[i]);
+        dandan_escribe_comando(p, cmds[i]);
 
     return true;
 }
@@ -119,12 +107,42 @@ inline void dandan_deinit(dandan_t *p) {
     free(p->buffer-1);
 }
 
+void dandan_escribe_square(dandan_t *p, uint32_t x, uint32_t y, uint32_t ancho, uint32_t alto) {
+    for(uint32_t i=0; i<ancho; ++i)
+        for(uint32_t j=0; j<alto; ++j)
+            dandan_escribe_pixel(p, x+i, y+j);
+}
+
+
+void dandan_escribe_char_with_font(dandan_t *p, uint32_t x, uint32_t y, uint32_t scale, const uint8_t *font, char c) {
+    if(c<font[3]||c>font[4])
+        return;
+
+    uint32_t parts_per_line=(font[0]>>3)+((font[0]&7)>0);
+    for(uint8_t w=0; w<font[1]; ++w) { // width
+        uint32_t pp=(c-font[3])*font[1]*parts_per_line+w*parts_per_line+5;
+        for(uint32_t lp=0; lp<parts_per_line; ++lp) {
+            uint8_t line=font[pp];
+
+            for(int8_t j=0; j<8; ++j, line>>=1) {
+                if(line & 1)
+                    dandan_escribe_square(p, x+w*scale, y+((lp<<3)+j)*scale, scale, scale);
+            }
+        }   }
+}
+void dandan_escribe_string_with_font(dandan_t *p, uint32_t x, uint32_t y, uint32_t scale, const uint8_t *font, const char *s) {
+    for(int32_t x_n=x; *s; x_n+=(font[1]+font[2])*scale) {
+        dandan_escribe_char_with_font(p, x_n, y, scale, font, *(s++));
+    }
+}
+
+
 inline void dandan_poweroff(dandan_t *p) {
-    dandan_escribe(p, SET_DISP|0x00);
+    dandan_escribe_comando(p, SET_DISP|0x00);
 }
 
 inline void dandan_poweron(dandan_t *p) {
-    dandan_escribe(p, SET_DISP|0x01);
+    dandan_escribe_comando(p, SET_DISP|0x01);
 }
 
 inline void dandan_contrast(dandan_t *p, uint8_t val) {
@@ -146,18 +164,14 @@ void dandan_limpia_pixel (dandan_t *p, uint32_t x, uint32_t y) {
     p->buffer[x+p->ancho*(y>>3)]&=~(0x1<<(y&0x07));
 }
 
-void dandan_escribe_pixel(dandan_t *p, uint32_t x, uint32_t y) {
-    if(x>=p->ancho || y>=p->alto) return;
 
-    p->buffer[x+p->ancho*(y>>3)]|=0x1<<(y&0x07); // y>>3==y/8 && y&0x7==y%8
-}
 
 void dandan_escribe_string(dandan_t *p, uint32_t x, uint32_t y, uint32_t scale, const char *s) {
     dandan_escribe_string_with_font(p, x, y, scale, font_8x5, s);
                                                     // font = arreglo de mapeo
 }
 
-void dandan_escribe(dandan_t *p) {
+void dandan_screen(dandan_t *p) {
     uint8_t payload[]= {SET_COL_ADDR, 0, p->ancho-1, SET_PAGE_ADDR, 0, p->pages-1};
     if(p->ancho==64) {
         payload[1]+=32;
@@ -165,9 +179,28 @@ void dandan_escribe(dandan_t *p) {
     }
 
     for(size_t i=0; i<sizeof(payload); ++i)
-        dandan_escribe(p, payload[i]);
+        dandan_escribe_comando(p, payload[i]);
 
     *(p->buffer-1)=0x40;
 
-    fancy_write(p->i2c_i, p->address, p->buffer-1, p->bufsize+1, "dandan_mostrar");
+    fancy_write(p->i2c_i, p->dire, p->buffer-1, p->bufsize+1, "dandan_mostrar");
+}
+inline void dandan_limp(dandan_t *p) {
+    memset(p->buffer, 0, p->bufsize);
+}
+
+void dandan_mostrar (dandan_t *p) {
+    uint8_t payload[]= {SET_COL_ADDR, 0, p->ancho-1, SET_PAGE_ADDR, 0, p->pages-1};
+    if(p->ancho==64) {
+        payload[1]+=32;
+        payload[2]+=32;
+     }
+
+    for(size_t i=0; i<sizeof(payload); ++i)
+        dandan_escribe_comando(p, payload[i]);
+
+    *(p->buffer-1)=0x40;
+
+    fancy_write(p->i2c_i, p->dire, p->buffer-1, p->bufsize+1, "dandan muestra"); 
+
 }
