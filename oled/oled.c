@@ -38,7 +38,6 @@ void arranque(void) {
 
 
 void impre(void) {
-    const char *words[]= {"Jose Isaac", "Suarez", "Guzman"};
 
     dandan_t disp;
     disp.external_vcc=false;
@@ -48,7 +47,7 @@ void impre(void) {
     char buf[8];
 
     for(;;) {
-        dandan_escribe_string(&disp,25,30,1,"JISG");
+        dandan_escribe_string(&disp,25,25,2,"JISG");
         dandan_mostrar(&disp);
         sleep_ms(1000);
         dandan_limp(&disp);
