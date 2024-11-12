@@ -4,9 +4,10 @@
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
 #include "dandan.h"
-
+#include "papyrus_data.h"
 
 const uint8_t num_chars_per_disp[]={7,7,7,5};
+const uint8_t *fonts[]= {papyrus};
 
 
 #define SLEEPTIME 25
@@ -47,8 +48,7 @@ void impre(void) {
     char buf[8];
 
     for(;;) {
-        
-        dandan_escribe_string(&disp, 8 , 10 , 3 , "JISG");
+        dandan_escribe_string(&disp,25,30,1,"JISG");
         dandan_mostrar(&disp);
         sleep_ms(1000);
         dandan_limp(&disp);

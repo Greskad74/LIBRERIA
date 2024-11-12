@@ -8,7 +8,7 @@
 #include <stdio.h>
 
 #include "dandan.h"
-#include "papyrus_data.h"
+#include "font.h"
 
 
 
@@ -113,25 +113,31 @@ void dandan_escribe_square(dandan_t *p, uint32_t x, uint32_t y, uint32_t ancho, 
             dandan_escribe_pixel(p, x+i, y+j);
 }
 
-
 void dandan_escribe_char_with_font(dandan_t *p, uint32_t x, uint32_t y, uint32_t scale, const uint8_t *font, char c) {
-    if(c<font[3]||c>font[4])
-        return;
+    if (c < font[3] || c > font[4]) return;  // Fuera de rango en la tabla ASCII de la fuente
 
-    uint32_t parts_per_line=(font[0]>>3)+((font[0]&7)>0);
-    for(uint8_t w=0; w<font[1]; ++w) { // width
-        uint32_t pp=(c-font[3])*font[1]*parts_per_line+w*parts_per_line+5;
-        for(uint32_t lp=0; lp<parts_per_line; ++lp) {
-            uint8_t line=font[pp];
+    uint8_t font_height = font[0]; // Altura de la fuente
+    uint8_t font_width = font[1];  // Ancho de la fuente
+    uint8_t parts_per_line = (font_height + 7) / 8; // Cantidad de bytes necesarios por columna de carácter
+    uint32_t index = 5 + (c - font[3]) * font_width * parts_per_line; // Ajuste del índice para caracteres multibyte
 
-            for(int8_t j=0; j<8; ++j, line>>=1) {
-                if(line & 1)
-                    dandan_escribe_square(p, x+w*scale, y+((lp<<3)+j)*scale, scale, scale);
+    // Dibujado del carácter según la altura y el ancho
+    for (uint8_t w = 0; w < font_width; ++w) {
+        for (uint8_t h = 0; h < parts_per_line; ++h) {
+            uint8_t line = font[index + w * parts_per_line + h];
+            for (int8_t bit = 0; bit < 8; ++bit) {
+                if (line & (1 << bit)) {
+                    dandan_escribe_square(p, x + w * scale, y + (h * 8 + bit) * scale, scale, scale);
+                }
             }
-        }   }
+        }
+    }
 }
+
 void dandan_escribe_string_with_font(dandan_t *p, uint32_t x, uint32_t y, uint32_t scale, const uint8_t *font, const char *s) {
-    for(int32_t x_n=x; *s; x_n+=(font[1]+font[2])*scale) {
+    uint8_t char_spacing = font[2];
+    uint8_t char_width = font [1];
+    for(int32_t x_n=x; *s; x_n+=(char_width + char_spacing )*scale) {
         dandan_escribe_char_with_font(p, x_n, y, scale, font, *(s++));
     }
 }
