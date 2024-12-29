@@ -4,10 +4,8 @@
 #include "pico/stdlib.h"
 #include "hardware/i2c.h"
 #include "dandan.h"
-#include "papyrus_data.h"
+#include "font.h"
 
-const uint8_t num_chars_per_disp[]={7,7,7,5};
-const uint8_t *fonts[]= {papyrus};
 
 
 #define SLEEPTIME 25
